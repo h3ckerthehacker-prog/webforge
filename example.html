@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WebForge — HTML Site Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #2a2a3a;
+      --accent: #ff5f1f;
+      --accent2: #00e5ff;
+      --text: #e8e8f0;
+      --muted: #6a6a8a;
+      --toolbar-h: 52px;
+      --sidebar-w: 260px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── TOOLBAR ── */
+    #toolbar {
+      height: var(--toolbar-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    #toolbar .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: var(--accent);
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+    #toolbar .logo span { color: var(--accent2); }
+
+    .sep { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
+
+    .tb-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: .72rem;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all .18s;
+      white-space: nowrap;
+    }
+    .tb-btn:hover { color: var(--text); border-color: var(--accent); }
+    .tb-btn.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .tb-btn.primary:hover { background: #ff7a45; }
+
+    #filename {
+      font-family: 'Space Mono', monospace;
+      font-size: .78rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 10px;
+      width: 160px;
+      transition: border-color .18s;
+    }
+    #filename:focus { outline: none; border-color: var(--accent2); }
+
+    .spacer { flex: 1; }
+
+    #view-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .vt-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: .7rem;
+      padding: 5px 14px;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      cursor: pointer;
+      transition: all .18s;
+    }
+    .vt-btn.active { background: var(--accent); color: #fff; }
+    .vt-btn:not(.active):hover { color: var(--text); background: var(--border); }
+
+    /* ── BODY AREA ── */
+    #body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .stab {
+      flex: 1;
+      font-family: 'Space Mono', monospace;
+      font-size: .68rem;
+      padding: 10px 0;
+      text-align: center;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+      border-bottom: 2px solid transparent;
+    }
+    .stab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+    .stab:hover:not(.active) { color: var(--text); }
+
+    .sidebar-content { flex: 1; overflow-y: auto; padding: 12px; }
+    .sidebar-content::-webkit-scrollbar { width: 4px; }
+    .sidebar-content::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: .6rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin: 14px 0 8px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    /* snippet cards */
+    .snippet {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all .18s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .snippet:hover { border-color: var(--accent); transform: translateX(2px); }
+    .snippet-icon {
+      font-size: 1rem;
+      width: 28px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .snippet-info { min-width: 0; }
+    .snippet-name {
+      font-size: .8rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .snippet-desc {
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* color swatches */
+    .color-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .swatch {
+      width: 28px; height: 28px; border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform .15s, border-color .15s;
+    }
+    .swatch:hover { transform: scale(1.2); border-color: #fff; }
+
+    .prop-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .prop-label { font-family: 'Space Mono', monospace; font-size: .65rem; color: var(--muted); }
+    .prop-input {
+      font-family: 'Space Mono', monospace;
+      font-size: .75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 9px;
+      width: 100%;
+      transition: border-color .18s;
+    }
+    .prop-input:focus { outline: none; border-color: var(--accent2); }
+
+    /* ── EDITOR AREA ── */
+    #editor-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #editor-wrap {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* code editor pane */
+    #code-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    .pane-header {
+      height: 34px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .pane-title {
+      font-family: 'Space Mono', monospace;
+      font-size: .68rem;
+      color: var(--muted);
+    }
+    .pane-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    #code-editor {
+      flex: 1;
+      resize: none;
+      background: var(--bg);
+      color: #c8d4e8;
+      font-family: 'Space Mono', monospace;
+      font-size: .8rem;
+      line-height: 1.7;
+      border: none;
+      padding: 16px 18px;
+      tab-size: 2;
+      outline: none;
+      overflow-y: auto;
+    }
+    #code-editor::-webkit-scrollbar { width: 6px; }
+    #code-editor::-webkit-scrollbar-track { background: transparent; }
+    #code-editor::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* preview pane */
+    #preview-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #preview-frame {
+      flex: 1;
+      border: none;
+      background: #fff;
+    }
+
+    /* ── STATUS BAR ── */
+    #statusbar {
+      height: 26px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .sb-item {
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      color: #fff;
+      opacity: .85;
+    }
+    #sb-status { opacity: 1; font-weight: 700; }
+
+    /* ── FULL-SCREEN VIEWS ── */
+    #code-only #preview-pane { display: none; }
+    #code-only #code-pane { border-right: none; }
+    #preview-only #code-pane { display: none; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent2);
+      color: #000;
+      font-family: 'Space Mono', monospace;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 30px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* panel tab switch */
+    .panel-section { display: none; }
+    .panel-section.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="logo">Web<span>Forge</span></div>
+  <div class="sep"></div>
+  <input id="filename" type="text" value="my-site.html" placeholder="filename.html" spellcheck="false"/>
+  <button class="tb-btn" onclick="newFile()">✦ New</button>
+  <button class="tb-btn" onclick="openFile()">↑ Open</button>
+  <button class="tb-btn primary" onclick="downloadFile()">↓ Download</button>
+  <div class="spacer"></div>
+  <button class="tb-btn" onclick="copyHTML()" style="border-color:#00e5ff;color:#00e5ff">⧉ Copy HTML</button>
+  <div class="sep"></div>
+  <div id="view-toggle">
+    <button class="vt-btn active" onclick="setView('split',this)">Split</button>
+    <button class="vt-btn" onclick="setView('code',this)">Code</button>
+    <button class="vt-btn" onclick="setView('preview',this)">Preview</button>
+  </div>
+</div>
+
+<!-- BODY -->
+<div id="body">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-tabs">
+      <button class="stab active" onclick="switchTab('snippets',this)">Snippets</button>
+      <button class="stab" onclick="switchTab('style',this)">Style</button>
+      <button class="stab" onclick="switchTab('templates',this)">Templates</button>
+    </div>
+    <div class="sidebar-content">
+
+      <!-- SNIPPETS -->
+      <div id="tab-snippets" class="panel-section active">
+        <div class="section-label">Structure</div>
+
+        <div class="snippet" onclick="insert(snippets.div)">
+          <div class="snippet-icon">▭</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Div Block</div>
+            <div class="snippet-desc">&lt;div&gt; container</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.section)">
+          <div class="snippet-icon">⬛</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Section</div>
+            <div class="snippet-desc">&lt;section&gt; block</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.nav)">
+          <div class="snippet-icon">≡</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Navbar</div>
+            <div class="snippet-desc">Navigation bar</div>
+          </div>
+        </div>
+
+        <div class="section-label">Content</div>
+
+        <div class="snippet" onclick="insert(snippets.h1)">
+          <div class="snippet-icon">H</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Heading</div>
+            <div class="snippet-desc">h1 – h3 text</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.para)">
+          <div class="snippet-icon">¶</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Paragraph</div>
+            <div class="snippet-desc">&lt;p&gt; text block</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.img)">
+          <div class="snippet-icon">🖼</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Image</div>
+            <div class="snippet-desc">&lt;img&gt; element</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.link)">
+          <div class="snippet-icon">🔗</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Link</div>
+            <div class="snippet-desc">&lt;a href&gt; tag</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.list)">
+          <div class="snippet-icon">•</div>
+          <div class="snippet-info">
+            <div class="snippet-name">List</div>
+            <div class="snippet-desc">&lt;ul&gt; / &lt;li&gt;</div>
+          </div>
+        </div>
+
+        <div class="section-label">Forms & UI</div>
+
+        <div class="snippet" onclick="insert(snippets.button)">
+          <div class="snippet-icon">⬜</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Button</div>
+            <div class="snippet-desc">&lt;button&gt; element</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.input)">
+          <div class="snippet-icon">▭</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Input Field</div>
+            <div class="snippet-desc">Text input + label</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.form)">
+          <div class="snippet-icon">📋</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Form</div>
+            <div class="snippet-desc">Basic &lt;form&gt;</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.table)">
+          <div class="snippet-icon">⊞</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Table</div>
+            <div class="snippet-desc">3-column table</div>
+          </div>
+        </div>
+
+        <div class="section-label">Style</div>
+
+        <div class="snippet" onclick="insert(snippets.styleblock)">
+          <div class="snippet-icon">#</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Style Block</div>
+            <div class="snippet-desc">&lt;style&gt; CSS block</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.flexrow)">
+          <div class="snippet-icon">↔</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Flex Row</div>
+            <div class="snippet-desc">display:flex row</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="insert(snippets.grid)">
+          <div class="snippet-icon">⊞</div>
+          <div class="snippet-info">
+            <div class="snippet-name">CSS Grid</div>
+            <div class="snippet-desc">3-col grid layout</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STYLE TAB -->
+      <div id="tab-style" class="panel-section">
+        <div class="section-label">Quick Colors</div>
+        <div class="color-row" id="swatches"></div>
+
+        <div class="section-label">Insert CSS Snippet</div>
+        <div class="snippet" onclick="insert(snippets.cssReset)">
+          <div class="snippet-icon">↺</div>
+          <div class="snippet-info">
+            <div class="snippet-name">CSS Reset</div>
+            <div class="snippet-desc">box-sizing + reset</div>
+          </div>
+        </div>
+        <div class="snippet" onclick="insert(snippets.googleFont)">
+          <div class="snippet-icon">A</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Google Font</div>
+            <div class="snippet-desc">Link + font-family</div>
+          </div>
+        </div>
+        <div class="snippet" onclick="insert(snippets.darkMode)">
+          <div class="snippet-icon">🌙</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Dark Theme</div>
+            <div class="snippet-desc">CSS vars dark mode</div>
+          </div>
+        </div>
+        <div class="snippet" onclick="insert(snippets.animation)">
+          <div class="snippet-icon">✦</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Fade-in Anim</div>
+            <div class="snippet-desc">@keyframes fadein</div>
+          </div>
+        </div>
+
+        <div class="section-label">Page Background</div>
+        <div class="prop-row">
+          <div class="prop-label">BG Color</div>
+          <input class="prop-input" type="color" value="#ffffff" onchange="setBg(this.value)" style="padding:2px;height:34px;cursor:pointer"/>
+        </div>
+        <div class="prop-row">
+          <div class="prop-label">Text Color</div>
+          <input class="prop-input" type="color" value="#111111" onchange="setTextColor(this.value)" style="padding:2px;height:34px;cursor:pointer"/>
+        </div>
+      </div>
+
+      <!-- TEMPLATES TAB -->
+      <div id="tab-templates" class="panel-section">
+        <div class="section-label">Start from a template</div>
+
+        <div class="snippet" onclick="loadTemplate('blank')">
+          <div class="snippet-icon">□</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Blank Page</div>
+            <div class="snippet-desc">Clean HTML5 skeleton</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="loadTemplate('landing')">
+          <div class="snippet-icon">🚀</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Landing Page</div>
+            <div class="snippet-desc">Hero + features + CTA</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="loadTemplate('blog')">
+          <div class="snippet-icon">📝</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Blog Post</div>
+            <div class="snippet-desc">Article layout</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="loadTemplate('portfolio')">
+          <div class="snippet-icon">🎨</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Portfolio</div>
+            <div class="snippet-desc">Cards grid layout</div>
+          </div>
+        </div>
+
+        <div class="snippet" onclick="loadTemplate('form')">
+          <div class="snippet-icon">📋</div>
+          <div class="snippet-info">
+            <div class="snippet-name">Contact Form</div>
+            <div class="snippet-desc">Styled form page</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="editor-area">
+    <div id="editor-wrap">
+      <div id="code-pane">
+        <div class="pane-header">
+          <div class="pane-dot" style="background:#ff5f57"></div>
+          <div class="pane-dot" style="background:#febc2e"></div>
+          <div class="pane-dot" style="background:#28c840"></div>
+          <div class="pane-title" style="margin-left:6px">HTML Editor</div>
+        </div>
+        <textarea id="code-editor" spellcheck="false" oninput="onEdit()" onkeydown="handleTab(event)"></textarea>
+      </div>
+      <div id="preview-pane">
+        <div class="pane-header">
+          <div class="pane-dot" style="background:#00e5ff;opacity:.6"></div>
+          <div class="pane-title">Live Preview</div>
+        </div>
+        <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <div class="sb-item" id="sb-status">● READY</div>
+  <div class="sb-item" id="sb-chars">0 chars</div>
+  <div class="sb-item" id="sb-lines">1 lines</div>
+  <div class="sb-item" style="margin-left:auto">WebForge v1.0</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- HIDDEN FILE INPUT -->
+<input type="file" id="file-input" accept=".html,.htm" style="display:none" onchange="handleFileOpen(event)"/>
+
+<script>
+  // ─── SNIPPETS ───────────────────────────────────────────────
+  const snippets = {
+    div: `\n<div class="container">\n  <!-- content here -->\n</div>\n`,
+    section: `\n<section id="my-section">\n  <h2>Section Title</h2>\n  <p>Your content goes here.</p>\n</section>\n`,
+    nav: `\n<nav style="display:flex; gap:16px; padding:12px 24px; background:#111;">\n  <a href="#" style="color:#fff; text-decoration:none;">Home</a>\n  <a href="#" style="color:#fff; text-decoration:none;">About</a>\n  <a href="#" style="color:#fff; text-decoration:none;">Contact</a>\n</nav>\n`,
+    h1: `\n<h1>Main Heading</h1>\n<h2>Sub Heading</h2>\n<h3>Smaller Heading</h3>\n`,
+    para: `\n<p>Your paragraph text goes here. Edit this to add your content.</p>\n`,
+    img: `\n<img src="https://picsum.photos/600/300" alt="Description" style="max-width:100%; border-radius:8px;"/>\n`,
+    link: `\n<a href="https://example.com" target="_blank">Click here</a>\n`,
+    list: `\n<ul>\n  <li>Item one</li>\n  <li>Item two</li>\n  <li>Item three</li>\n</ul>\n`,
+    button: `\n<button style="padding:10px 24px; background:#ff5f1f; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">Click Me</button>\n`,
+    input: `\n<label for="myInput">Label:</label>\n<input type="text" id="myInput" placeholder="Enter text..." style="display:block; margin-top:6px; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1rem;"/>\n`,
+    form: `\n<form>\n  <label>Name: <input type="text" name="name" placeholder="Your name"/></label><br/><br/>\n  <label>Email: <input type="email" name="email" placeholder="you@example.com"/></label><br/><br/>\n  <button type="submit">Submit</button>\n</form>\n`,
+    table: `\n<table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">\n  <thead>\n    <tr><th>Name</th><th>Age</th><th>City</th></tr>\n  </thead>\n  <tbody>\n    <tr><td>Alice</td><td>30</td><td>London</td></tr>\n    <tr><td>Bob</td><td>25</td><td>Berlin</td></tr>\n  </tbody>\n</table>\n`,
+    styleblock: `\n<style>\n  body {\n    font-family: sans-serif;\n    margin: 0;\n    padding: 20px;\n  }\n</style>\n`,
+    flexrow: `\n<div style="display:flex; gap:16px; align-items:center;">\n  <div style="padding:16px; background:#eee;">Item 1</div>\n  <div style="padding:16px; background:#eee;">Item 2</div>\n  <div style="padding:16px; background:#eee;">Item 3</div>\n</div>\n`,
+    grid: `\n<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">\n  <div style="padding:16px; background:#eee;">Cell 1</div>\n  <div style="padding:16px; background:#eee;">Cell 2</div>\n  <div style="padding:16px; background:#eee;">Cell 3</div>\n</div>\n`,
+    cssReset: `<style>\n*, *::before, *::after { box-sizing: border-box; }\nbody { margin: 0; padding: 0; font-family: sans-serif; }\n</style>\n`,
+    googleFont: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>\n<style>body { font-family: 'Inter', sans-serif; }</style>\n`,
+    darkMode: `<style>\n:root { --bg: #111; --text: #eee; --accent: #ff5f1f; }\nbody { background: var(--bg); color: var(--text); }\n</style>\n`,
+    animation: `<style>\n@keyframes fadeIn {\n  from { opacity: 0; transform: translateY(20px); }\n  to   { opacity: 1; transform: translateY(0); }\n}\n.fade-in { animation: fadeIn .6s ease forwards; }\n</style>\n`,
+  };
+
+  // ─── TEMPLATES ──────────────────────────────────────────────
+  const templates = {
+    blank: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>\n  <title>My Page</title>\n</head>\n<body>\n  <h1>Hello, World!</h1>\n  <p>Start building your page here.</p>\n</body>\n</html>`,
+
+    landing: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>Landing Page</title>\n  <style>\n    * { box-sizing:border-box; margin:0; padding:0; }\n    body { font-family: 'Segoe UI', sans-serif; color:#111; }\n    nav { display:flex; justify-content:space-between; align-items:center; padding:16px 40px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.08); }\n    nav .logo { font-weight:800; font-size:1.3rem; color:#ff5f1f; }\n    nav a { text-decoration:none; color:#444; margin-left:24px; }\n    .hero { text-align:center; padding:100px 40px; background:linear-gradient(135deg,#fff5f0,#fff); }\n    .hero h1 { font-size:3rem; font-weight:900; color:#111; }\n    .hero p { font-size:1.2rem; color:#555; margin:20px auto; max-width:520px; }\n    .btn { display:inline-block; padding:14px 36px; background:#ff5f1f; color:#fff; text-decoration:none; border-radius:8px; font-weight:700; font-size:1rem; margin-top:12px; }\n    .features { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding:60px 40px; background:#fafafa; }\n    .card { background:#fff; border-radius:12px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,.06); }\n    .card h3 { margin-bottom:10px; }\n    footer { text-align:center; padding:30px; color:#888; font-size:.9rem; border-top:1px solid #eee; }\n  </style>\n</head>\n<body>\n  <nav>\n    <div class="logo">MyBrand</div>\n    <div><a href="#">Features</a><a href="#">Pricing</a><a href="#">Contact</a></div>\n  </nav>\n  <section class="hero">\n    <h1>Build Something Amazing</h1>\n    <p>The fastest way to get your idea online. No code required.</p>\n    <a href="#" class="btn">Get Started Free</a>\n  </section>\n  <section class="features">\n    <div class="card"><h3>⚡ Fast</h3><p>Blazing-fast performance out of the box.</p></div>\n    <div class="card"><h3>🎨 Beautiful</h3><p>Stunning design with zero effort.</p></div>\n    <div class="card"><h3>🔒 Secure</h3><p>Enterprise-grade security included.</p></div>\n  </section>\n  <footer>© 2026 MyBrand. All rights reserved.</footer>\n</body>\n</html>`,
+
+    blog: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>Blog Post</title>\n  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Inter&display=swap" rel="stylesheet"/>\n  <style>\n    body { font-family:'Inter',sans-serif; background:#fffdf8; color:#222; max-width:720px; margin:0 auto; padding:40px 20px; }\n    header { border-bottom:2px solid #111; padding-bottom:20px; margin-bottom:40px; }\n    header h1 { font-family:'Lora',serif; font-size:2.4rem; line-height:1.2; }\n    .meta { color:#888; font-size:.9rem; margin-top:10px; }\n    article h2 { font-family:'Lora',serif; font-size:1.5rem; margin:32px 0 12px; }\n    article p { line-height:1.8; margin-bottom:16px; }\n    blockquote { border-left:4px solid #ff5f1f; padding:12px 20px; margin:24px 0; background:#fff5f0; font-style:italic; }\n    footer { margin-top:60px; padding-top:20px; border-top:1px solid #eee; color:#888; font-size:.85rem; }\n  </style>\n</head>\n<body>\n  <header>\n    <div style="color:#ff5f1f; font-weight:700; margin-bottom:8px;">MY BLOG</div>\n    <h1>How to Build Anything with HTML</h1>\n    <div class="meta">By Jane Doe &nbsp;·&nbsp; March 25, 2026 &nbsp;·&nbsp; 5 min read</div>\n  </header>\n  <article>\n    <p>HTML is the backbone of every website. Once you understand it, you can build almost anything.</p>\n    <h2>Getting Started</h2>\n    <p>All you need is a text editor and a browser. Open a new file, save it as <code>index.html</code>, and you're ready.</p>\n    <blockquote>The best time to start was yesterday. The second best time is now.</blockquote>\n    <h2>Structure Matters</h2>\n    <p>A well-structured page uses semantic elements: &lt;header&gt;, &lt;main&gt;, &lt;section&gt;, &lt;article&gt;, and &lt;footer&gt;.</p>\n  </article>\n  <footer>© 2026 My Blog · All rights reserved</footer>\n</body>\n</html>`,
+
+    portfolio: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>Portfolio</title>\n  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;800&display=swap" rel="stylesheet"/>\n  <style>\n    * { box-sizing:border-box; margin:0; padding:0; }\n    body { font-family:'Space Grotesk',sans-serif; background:#0f0f13; color:#eee; }\n    .hero { padding:80px 40px; text-align:center; }\n    .hero h1 { font-size:3.5rem; font-weight:800; }\n    .hero h1 span { color:#ff5f1f; }\n    .hero p { color:#aaa; margin-top:14px; font-size:1.1rem; }\n    .works { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; padding:40px; }\n    .work-card { background:#1a1a23; border-radius:12px; overflow:hidden; transition:transform .2s; }\n    .work-card:hover { transform:translateY(-4px); }\n    .work-card img { width:100%; height:180px; object-fit:cover; }\n    .work-info { padding:16px; }\n    .work-info h3 { font-weight:700; }\n    .work-info p { color:#888; font-size:.9rem; margin-top:6px; }\n    .tag { display:inline-block; background:#ff5f1f22; color:#ff5f1f; padding:3px 10px; border-radius:20px; font-size:.75rem; margin-top:10px; }\n    footer { text-align:center; padding:40px; color:#555; }\n  </style>\n</head>\n<body>\n  <div class="hero">\n    <h1>Hi, I'm <span>Alex</span> 👋</h1>\n    <p>Designer & Developer · Building beautiful things on the web</p>\n  </div>\n  <div class="works">\n    <div class="work-card">\n      <img src="https://picsum.photos/seed/p1/400/200" alt=""/>\n      <div class="work-info"><h3>Project Alpha</h3><p>A bold new web experience.</p><span class="tag">HTML/CSS</span></div>\n    </div>\n    <div class="work-card">\n      <img src="https://picsum.photos/seed/p2/400/200" alt=""/>\n      <div class="work-info"><h3>Project Beta</h3><p>Data viz for a fintech startup.</p><span class="tag">JavaScript</span></div>\n    </div>\n    <div class="work-card">\n      <img src="https://picsum.photos/seed/p3/400/200" alt=""/>\n      <div class="work-info"><h3>Project Gamma</h3><p>E-commerce redesign.</p><span class="tag">Design</span></div>\n    </div>\n  </div>\n  <footer>© 2026 Alex · Made with ❤️ and HTML</footer>\n</body>\n</html>`,
+
+    form: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8"/>\n  <title>Contact</title>\n  <style>\n    * { box-sizing:border-box; margin:0; padding:0; }\n    body { font-family:'Segoe UI',sans-serif; background:#f5f5f5; display:flex; justify-content:center; align-items:center; min-height:100vh; }\n    .card { background:#fff; border-radius:16px; padding:40px; width:100%; max-width:480px; box-shadow:0 8px 32px rgba(0,0,0,.1); }\n    h2 { font-size:1.8rem; margin-bottom:6px; }\n    p { color:#888; margin-bottom:28px; font-size:.95rem; }\n    label { display:block; font-size:.85rem; font-weight:600; color:#444; margin-bottom:6px; }\n    input, textarea { width:100%; padding:10px 14px; border:1.5px solid #ddd; border-radius:8px; font-size:1rem; margin-bottom:18px; transition:border-color .2s; }\n    input:focus, textarea:focus { outline:none; border-color:#ff5f1f; }\n    textarea { height:110px; resize:vertical; }\n    button { width:100%; padding:13px; background:#ff5f1f; color:#fff; border:none; border-radius:8px; font-size:1rem; font-weight:700; cursor:pointer; }\n    button:hover { background:#e04e10; }\n  </style>\n</head>\n<body>\n  <div class="card">\n    <h2>Get in touch</h2>\n    <p>Fill out the form and I'll get back to you soon.</p>\n    <form>\n      <label>Your Name</label>\n      <input type="text" placeholder="Jane Smith"/>\n      <label>Email Address</label>\n      <input type="email" placeholder="jane@example.com"/>\n      <label>Message</label>\n      <textarea placeholder="What's on your mind?"></textarea>\n      <button type="submit">Send Message →</button>\n    </form>\n  </div>\n</body>\n</html>`,
+  };
+
+  // ─── SWATCHES ────────────────────────────────────────────────
+  const colors = ['#ff5f1f','#00e5ff','#111111','#ffffff','#f5f5f5','#fbbf24','#22c55e','#3b82f6','#ec4899','#8b5cf6','#ef4444','#6b7280'];
+  const swatchEl = document.getElementById('swatches');
+  colors.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'swatch';
+    s.style.background = c;
+    s.title = c;
+    s.onclick = () => insertColor(c);
+    swatchEl.appendChild(s);
+  });
+
+  // ─── EDITOR LOGIC ────────────────────────────────────────────
+  const editor = document.getElementById('code-editor');
+  const frame = document.getElementById('preview-frame');
+  let previewTimer;
+
+  function loadTemplate(name) {
+    if (editor.value.trim() && !confirm('Replace current code with template?')) return;
+    editor.value = templates[name];
+    updatePreview();
+    updateStatus();
+    toast('Template loaded!');
+  }
+
+  // load blank on start
+  loadTemplate('blank');
+
+  function onEdit() {
+    updateStatus();
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(updatePreview, 300);
+  }
+
+  function updatePreview() {
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    doc.open();
+    doc.write(editor.value);
+    doc.close();
+  }
+
+  function updateStatus() {
+    const val = editor.value;
+    document.getElementById('sb-chars').textContent = val.length + ' chars';
+    document.getElementById('sb-lines').textContent = val.split('\n').length + ' lines';
+  }
+
+  function handleTab(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = editor.selectionStart, end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, s) + '  ' + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = s + 2;
+    }
+  }
+
+  function insert(code) {
+    const s = editor.selectionStart;
+    editor.value = editor.value.substring(0, s) + code + editor.value.substring(editor.selectionEnd);
+    editor.selectionStart = editor.selectionEnd = s + code.length;
+    editor.focus();
+    onEdit();
+    toast('Snippet inserted!');
+  }
+
+  function insertColor(c) {
+    insert(c);
+    toast('Color inserted: ' + c);
+  }
+
+  function setBg(color) {
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    if (doc.body) doc.body.style.background = color;
+  }
+
+  function setTextColor(color) {
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    if (doc.body) doc.body.style.color = color;
+  }
+
+  // ─── FILE OPS ────────────────────────────────────────────────
+  function newFile() {
+    if (editor.value.trim() && !confirm('Discard current code?')) return;
+    loadTemplate('blank');
+    document.getElementById('filename').value = 'my-site.html';
+  }
+
+  function openFile() {
+    document.getElementById('file-input').click();
+  }
+
+  function handleFileOpen(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      editor.value = ev.target.result;
+      document.getElementById('filename').value = file.name;
+      updatePreview();
+      updateStatus();
+      toast('File opened!');
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function downloadFile() {
+    const name = document.getElementById('filename').value || 'my-site.html';
+    const blob = new Blob([editor.value], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name.endsWith('.html') ? name : name + '.html';
+    a.click();
+    toast('Downloaded ' + a.download);
+  }
+
+  function copyHTML() {
+    navigator.clipboard.writeText(editor.value).then(() => toast('Copied to clipboard!'));
+  }
+
+  // ─── VIEW TOGGLE ─────────────────────────────────────────────
+  function setView(mode, btn) {
+    document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const wrap = document.getElementById('editor-wrap');
+    wrap.id = mode === 'split' ? 'editor-wrap' : (mode === 'code' ? 'code-only' : 'preview-only');
+    // reset to editor-wrap when switching
+    wrap.removeAttribute('id');
+    wrap.id = 'editor-wrap';
+    const codePane = document.getElementById('code-pane');
+    const prevPane = document.getElementById('preview-pane');
+    if (mode === 'split') { codePane.style.display = ''; prevPane.style.display = ''; codePane.style.borderRight = '1px solid var(--border)'; }
+    if (mode === 'code') { codePane.style.display = ''; prevPane.style.display = 'none'; codePane.style.borderRight = 'none'; }
+    if (mode === 'preview') { codePane.style.display = 'none'; prevPane.style.display = ''; }
+    if (mode !== 'code') updatePreview();
+  }
+
+  // ─── SIDEBAR TABS ────────────────────────────────────────────
+  function switchTab(name, btn) {
+    document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel-section').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  // ─── TOAST ───────────────────────────────────────────────────
+  let toastTimer;
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  updateStatus();
+</script>
+</body>
+</html>
